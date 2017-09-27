@@ -1,0 +1,464 @@
+<script type="application/javascript">
+
+	var http = require('http');
+	var https = require('https');
+	var request = (method, url, requestData, headers, callback) => {
+		const split = url.split("/");
+		let path = "/";
+		let host = split[2];
+		let port = 80;
+		if (split.length > 2) {
+			if (url.indexOf("http://") !== -1) {
+				path = url.substr(7 + host.length)
+			} else {
+				path = url.substr(8 + host.length)
+
+			}
+		}
+		if (url.indexOf("https://") !== -1) {
+			port = 443;
+		}
+		if (host.indexOf(":") !== -1) {
+			port = host.split(":")[1];
+			host = host.split(":")[0];
+		}
+		const options = {
+			hostname: host,
+			port: port,
+			path: path,
+			method: method,
+			headers: headers
+		};
+		console.log(host);
+		console.log(path);
+		let data = null;
+
+		if (url.indexOf("https://") !== -1) {
+
+			const request = https.request(options, (response) => {
+				response.on('data', (chunk) => {
+					if (data === null) {
+						data = chunk;
+					} else {
+						data += chunk;
+					}
+				});
+				response.on('end', () => {
+					callback(true, {headers: response.headers, data: data, code: response.statusCode});
+				});
+
+			});
+			request.on('error', (e) => {
+				callback(false, e.message);
+			});
+			if (requestData !== null && requestData !== typeof undefined) request.write(requestData);
+			request.end();
+		} else {
+			const request = http.request(options, (response) => {
+				response.on('data', (chunk) => {
+					if (data === null) {
+						data = chunk;
+					} else {
+						data += chunk;
+					}
+				});
+				response.on('end', () => {
+					callback(true, {headers: response.headers, data: data, code: response.statusCode});
+				});
+
+			});
+			request.on('error', (e) => {
+				callback(false, e.message);
+			});
+			if (requestData !== null && requestData !== typeof undefined) request.write(requestData);
+			request.end();
+		}
+
+	};
+	var getContent = function (options, onResult) {
+		const prot = options.port == 8243 ? https : http;
+		var req = prot.request(options, function (res) {
+			var output = [];
+			console.log(options.host + ':' + res.statusCode);
+			//    res.setEncoding('utf8');
+
+			res.on('data', function (chunk) {
+				output.push(chunk);
+			});
+
+			res.on('end', function () {
+				var obj = Buffer.concat(output);
+				onResult(res.statusCode, obj, res.headers);
+			});
+		});
+
+		req.on('error', function (err) {
+			//res.send('error: ' + err.message);
+		});
+
+		req.end();
+	};
+
+</script>
+
+<h1>Http Request Maker</h1>
+
+<div class="row">
+	<a id="method-drop-btn" class='dropdown-button btn' href='#' data-activates='method-drop'>Method</a>
+	<ul id='method-drop' class='dropdown-content'>
+		<li><a href="#!">GET</a></li>
+		<li><a href="#!">POST</a></li>
+		<li><a href="#!">PATCH</a></li>
+		<li><a href="#!">HEAD</a></li>
+		<li><a href="#!">DELETE</a></li>
+	</ul>
+</div>
+<div class="row">
+	<div class="input-field">
+		<input id="url-field" type="text" class="validate">
+		<label for="url-field">URL</label>
+	</div>
+</div>
+<div>
+	<h3>Header</h3>
+	<ul id="set-headers">
+
+	</ul>
+
+	<div class="row">
+		<div class="col s10">
+			<div class="input-field col s6">
+				<input id="header-key" type="text" class="validate">
+				<label for="header-key">Header Name</label>
+			</div>
+			<div class="input-field col s6">
+				<input id="header-val" type="text" class="validate">
+				<label for="header-val">Header Value</label>
+			</div>
+		</div>
+		<div class="col s2">
+			<a id="add-header-btn" class="waves-effect waves-light btn">Add Header</a>
+		</div>
+	</div>
+</div>
+<div id="body-part" style="display: none">
+	<h3>Request Body</h3>
+	<div class="row">
+		<div class="col s12">
+			<ul class="tabs">
+				<li class="tab col s3"><a href="#test1">Arguments</a></li>
+				<li class="tab col s3"><a class="active" href="#test2">Raw Body</a></li>
+			</ul>
+		</div>
+		<div id="test1" class="col s12">
+			<ul id="set-bodys">
+
+			</ul>
+
+			<div class="row">
+				<div class="col s10">
+					<div class="input-field col s6">
+						<input id="body-key" type="text" class="validate">
+						<label for="body-key">Key</label>
+					</div>
+					<div class="input-field col s6">
+						<input id="body-val" type="text" class="validate">
+						<label for="body-val">Value</label>
+					</div>
+				</div>
+				<div class="col s2">
+					<a id="add-body-btn" class="waves-effect waves-light btn">Add body</a>
+				</div>
+			</div>
+		</div>
+		<div id="test2" class="col s12">
+			<div class="input-field col s12">
+				<textarea id="raw-input" class="materialize-textarea"></textarea>
+				<label for="raw-input">Raw Input</label>
+			</div>
+
+		</div>
+	</div>
+</div>
+<br />
+<br />
+<br />
+<div class="row">
+
+	<h3>Response</h3>
+	<div class="card-panel ">
+		<div class="col s2">
+			<a id="exec" class="waves-effect waves-light btn">Execute</a>
+		</div>
+		<div>
+			<div class="row">
+				<div class="col s12">
+					<div class="input-field col s12">
+						<textarea id="out-header" class="materialize-textarea"></textarea>
+						<label for="out-header">Response Headers</label>
+					</div>
+
+				</div>
+			</div>
+			<div class="row">
+				<div class="input-field col s12">
+					<textarea id="out-body" class="materialize-textarea"></textarea>
+					<label for="out-body">Response Body</label>
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+</div>
+<script type="application/javascript">
+
+
+	var requestMethod = "GET";
+	var bodyEnabled = false;
+	var requestHeaders = [];
+	var requestbodys = [];
+	var headerCount = 0;
+	var bodyCount = 0;
+	var requestBody = "";
+
+	$("#exec").click(() => {
+
+		$("#exec").html("Executing").addClass("disabled");
+
+		const headerArea = $("#out-header");
+		const bodyArea = $("#out-body");
+		headerArea.val("");
+		bodyArea.val("");
+		const headers = {};
+
+		for (let i = 0; i < requestHeaders.length; i++) {
+			const key = requestHeaders[i].key;
+			const value = requestHeaders[i].value;
+
+			headers[key] = value;
+		}
+
+		const timeOutCanceller = setTimeout(() => {
+			$("#exec").html("Execute").removeClass("disabled");
+
+		}, 60000);
+		request(requestMethod, $("#url-field").val(), requestMethod === "POST" ? requestBody : null, headers, (succ, data) => {
+			clearTimeout(timeOutCanceller);
+			$("#exec").html("Execute").removeClass("disabled");
+
+			if (!succ) {
+
+				Materialize.toast(data, 10000);
+				return;
+			}
+			const responseKeys = Object.keys(data.headers);
+			let headerContent = "";
+			for (let i = 0; i < responseKeys.length; i++) {
+				headerContent += responseKeys[i] + ":" + data.headers[responseKeys[i]] + "\n";
+			}
+
+			bodyArea.val(data.data);
+			headerArea.val(headerContent);
+		})
+
+	});
+
+	var processVars = () => {
+
+		var content = "";
+
+		for (let i = 0; i < requestbodys.length; i++) {
+
+			if (content !== "") content += "&";
+			content += encodeURIComponent(requestbodys[i].key) + "=" + encodeURIComponent(requestbodys[i].value);
+		}
+
+		requestBody = content;
+		$("#raw-input").val(content);
+	};
+	$('ul.tabs').tabs();
+	$('.dropdown-button').dropdown({
+			inDuration: 300,
+			outDuration: 225,
+			constrainWidth: false, // Does not change width of dropdown to that of the activator
+			gutter: 0, // Spacing from edge
+			belowOrigin: false, // Displays dropdown below the button
+			alignment: 'left', // Displays dropdown with edge aligned to the left of button
+			stopPropagation: false // Stops event propagation
+		}
+	);
+
+	$('li', $('#method-drop')).each(function () {
+
+		$(this.firstChild).click(() => {
+
+			requestMethod = $(this.firstChild).html();
+			$("#method-drop-btn").html(requestMethod);
+			if (requestMethod === "POST") {
+				if (!bodyEnabled) {
+					bodyEnabled = true;
+					$("#body-part").show();
+				}
+			} else {
+				if (bodyEnabled) {
+					bodyEnabled = false;
+					$("#body-part").hide();
+
+				}
+			}
+		});
+	});
+
+
+	$("#add-header-btn").click(() => {
+		const key = $("#header-key").val();
+		const value = $("#header-val").val();
+
+		for (let i = 0; i != requestHeaders.length; i++) {
+			const current = requestHeaders[i];
+			if (current.key == key && current.value == value) {
+				return;
+			}
+		}
+		const currentCount = headerCount + 1;
+		headerCount++;
+		requestHeaders.push({key: key, value: value, id: headerCount});
+		$("#set-headers").append('' +
+			'<div class="row" id="header-' + currentCount + '">' +
+			'        <div class="col s10">\n' +
+			'            <div class="input-field col s6">\n' +
+			'                <input id="header-key-' + currentCount + '" value="' + key + '" type="text" class="validate">\n' +
+			'                <label class="active" for="header-key-' + currentCount + '">Header Name</label>\n' +
+			'            </div>\n' +
+			'            <div class="input-field col s6">\n' +
+			'                <input id="header-val-' + headerCount + '" type="text" value="' + value + '"  class="validate">\n' +
+			'                <label class="active" for="header-val-' + currentCount + '">Header Value</label>\n' +
+			'        </div>' +
+			'</div>'
+			+ '<div class="col s2"><a id="del-header-btn-' + currentCount + '" class="waves-effect waves-light btn">Delete</a></div>'
+		);
+		$("#del-header-btn-" + currentCount).click(() => {
+			for (let i = 0; i < requestHeaders.length; i++) {
+				const currentHeader = requestHeaders[i];
+
+				if (currentHeader.id == currentCount) {
+
+
+					console.log(i, requestHeaders);
+					$("#header-" + currentHeader.id).remove();
+					requestHeaders.splice(requestHeaders.indexOf(currentHeader), 1);
+					console.log(requestHeaders);
+					break;
+				}
+			}
+			if (requestHeaders.length == 0) $("#set-headers").html("");
+
+		});
+		$("#header-val-" + currentCount).change(() => {
+			{
+
+				for (let i = 0; i < requestHeaders.length; i++) {
+					const currentHeader = requestHeaders[i];
+
+					if (currentHeader.id == currentCount) {
+						currentHeader.value = $("#header-val-" + currentCount).val();
+						break;
+					}
+				}
+
+			}
+		});
+		$("#header-key-" + currentCount).change(() => {
+			{
+
+				for (let i = 0; i < requestHeaders.length; i++) {
+					const currentHeader = requestHeaders[i];
+
+					if (currentHeader.id == currentCount) {
+						currentHeader.key = $("#header-key-" + currentCount).val();
+						break;
+					}
+				}
+			}
+		});
+	});
+
+
+	$("#add-body-btn").click(() => {
+		const key = $("#body-key").val();
+		const value = $("#body-val").val();
+
+		for (let i = 0; i != requestbodys.length; i++) {
+			const current = requestbodys[i];
+			if (current.key == key && current.value == value) {
+				return;
+			}
+		}
+		const currentCount = bodyCount + 1;
+		bodyCount++;
+		requestbodys.push({key: key, value: value, id: bodyCount});
+		$("#set-bodys").append('' +
+			'<div class="row" id="body-' + bodyCount + '">' +
+			'        <div class="col s10">\n' +
+			'            <div class="input-field col s6">\n' +
+			'                <input id="body-key-' + bodyCount + '" value="' + key + '" type="text" class="validate">\n' +
+			'                <label class="active" for="body-key-' + bodyCount + '">Key</label>\n' +
+			'            </div>\n' +
+			'            <div class="input-field col s6">\n' +
+			'                <input id="body-val-' + bodyCount + '" type="text" value="' + value + '"  class="validate">\n' +
+			'                <label class="active" for="body-val-' + bodyCount + '">Value</label>\n' +
+			'        </div>' +
+			'</div>'
+			+ '<div class="col s2"><a id="del-body-btn-' + bodyCount + '" class="waves-effect waves-light btn">Delete</a></div>'
+		);
+		$("#del-body-btn-" + currentCount).click(() => {
+			for (let i = 0; i < requestbodys.length; i++) {
+				const currentbody = requestbodys[i];
+
+				if (currentbody.id == currentCount) {
+					console.log(requestbodys);
+					$("#body-" + currentbody.id).remove();
+					requestbodys.splice(requestbodys.indexOf(currentbody), 1);
+					console.log(requestbodys)
+					break;
+				}
+			}
+			if (requestbodys.length == 0) $("#set-bodys").html("");
+
+		});
+
+		$("#body-val-" + currentCount).change(() => {
+			{
+
+				for (let i = 0; i < requestbodys.length; i++) {
+					const currentbody = requestbodys[i];
+
+					if (currentbody.id == currentCount) {
+						currentbody.value = $("#body-val-" + currentCount).val();
+						break;
+					}
+				}
+				processVars();
+
+			}
+		});
+		$("#body-key-" + currentCount).change(() => {
+			{
+
+				for (let i = 0; i < requestbodys.length; i++) {
+					const currentbody = requestbodys[i];
+
+					if (currentbody.id == currentCount) {
+						currentbody.key = $("#body-key-" + currentCount).val();
+						break;
+					}
+				}
+				processVars();
+
+			}
+		});
+
+		processVars();
+	});
+</script>

@@ -1,0 +1,30 @@
+<h1>URL Encoder/Decoder</h1>
+
+<div class="row">
+    <div class="input-field col s12">
+        <textarea id="input" class="materialize-textarea"></textarea>
+        <label for="input">Input</label>
+    </div>
+    <a id="en-btn" class="waves-effect waves-light btn">Encode</a>
+    <a id="de-btn" class="waves-effect waves-light btn">Decode</a>
+
+</div>
+
+<div class="row">
+    <div class="input-field col s12">
+        <textarea id="output" class="materialize-textarea"></textarea>
+        <label for="output">Output</label>
+    </div>
+
+</div>
+<script type="application/javascript">
+    $("#output").val("  ");
+    $("#en-btn").click(() =>  {
+        var input = $("#input").val();
+        $("#output").val(encodeURIComponent(input));
+    });
+    $("#de-btn").click(() =>  {
+        var input = $("#input").val();
+        $("#output").val(decodeURIComponent(input));
+    });
+</script>

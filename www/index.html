@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>devUtils</title>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="assets/css/materialize.min.css" rel="stylesheet">
+
+    <style>
+        .icon-block {
+            padding: 0 15px;
+        }
+        .icon-block .material-icons {
+            font-size: inherit;
+        }
+
+    </style>
+</head>
+<body>
+<ul id="design-dropdown" class="dropdown-content">
+    <li><a onclick="loadPage('design/colorpicker', 'Design Colorpicker')">Colorpicker</a></li>
+    <li><a href="#!">two</a></li>
+    <li><a href="#!">three</a></li>
+</ul>
+<ul id="coding-dropdown" class="dropdown-content">
+    <li><a onclick="loadPage('coding/hello-world')">Hello World</a></li>
+    <li><a href="#!" onclick="loadPage('coding/json-decoder')">JSON Parser</a></li>
+    <li><a href="#!" onclick="loadPage('coding/http-request')">Http Request</a></li>
+</ul>
+<ul id="crypto-dropdown" class="dropdown-content">
+    <li><a onclick="loadPage('crypto/base64', 'Cryptology Base64')">Base64</a></li>
+    <li><a onclick="loadPage('crypto/urldec', 'Cryptology Base64')">Url Encoding</a></li>
+    <li><a onclick="loadPage('crypto/hash', 'Cryptology Base64')">Generate Hashes</a></li>
+</ul>
+
+<ul id="local-dropdown" class="dropdown-content">
+    <li><a onclick="loadPage('locals/cmds', 'Local, easy Commands')">Short Commands</a></li>
+
+</ul>
+
+
+<nav class="nav-extended light-blue" role="navigation">
+<div class="nav-wrapper container"><a id="logo-container" href="#" class="brand-logo right">Logo</a>
+    <ul id="nav-mobile" class="side-nav">
+        <li><a onclick="loadPage('home', 'devUtils Home')">Home</a></li>
+        <li class="divider"></li>
+        <li><a class="dropdown-button" href="#!" data-activates="design-dropdown">Design</a></li>
+        <li><a class="dropdown-button" href="#!" data-activates="coding-dropdown">Programming</a></li>
+        <li><a class="dropdown-button" href="#!" data-activates="crypto-dropdown">Cryptology</a></li>
+        <li><a class="dropdown-button" href="#!" data-activates="local-dropdown">Local</a></li>
+        <li><a >This System</a></li>
+
+    </ul>
+    <a href="#" data-activates="nav-mobile" class="button-collapse show-on-large"><i class="material-icons">menu</i></a>
+    <div class="col s12" id="path">
+
+    </div>
+</div>
+</nav>
+<div class="container">
+    <div id="content">
+    </div>
+</div>
+
+<script src="assets/js/hammer.js" onload="window.Hammer = module.exports;"></script>
+<script type="application/javascript" src="js/loader.js"></script>
+<script type="application/javascript" src="js/init.js"></script>
+</body>
+</html>

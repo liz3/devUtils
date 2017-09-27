@@ -1,0 +1,76 @@
+<h1>JSON decoder</h1>
+
+<div class="row">
+	<div class="input-field col s12">
+		<textarea id="input" class="materialize-textarea"></textarea>
+		<label for="input">Input</label>
+	</div>
+
+	<a id="de-btn" class="waves-effect waves-light btn">Decode</a>
+
+
+	<div id="output">
+
+	</div>
+
+</div>
+
+<script type="application/javascript">
+
+	var parseObject = (object) => {
+		console.log(object);
+		let content = "";
+		const arrayConstructor = [].constructor;
+		const objectConstructor = {}.constructor;
+
+		if (object.constructor === objectConstructor) {
+			console.log("Is Object");
+			const keys = Object.keys(object);
+			for (let i = 0; i != keys.length; i++) {
+				let key = keys[i];
+				const value = object[key];
+				if (value == null) {
+					content += "<p>" + key + ": null</p>";
+					continue
+				}
+				if (value.constructor === arrayConstructor || value.constructor === objectConstructor) {
+					content += getCollapser(key, parseObject(value));
+				} else {
+					content += "<p>" + key + ": " + value + " </p>";
+				}
+
+			}
+
+		} else if (object.constructor === arrayConstructor) {
+			for (let i = 0; i != object.length; i++) {
+				const value = object[i];
+				if (value.constructor === arrayConstructor || value.constructor === objectConstructor) {
+					content += getCollapser("Array", parseObject(value));
+				} else {
+					content += content === "" ? value : ", " + value;
+				}
+			}
+
+
+		}
+		return content;
+	};
+
+	var getCollapser = (name, data) => {
+		return ' <ul class="collapsible" data-collapsible="expandable">\n' +
+			'    <li>\n' +
+			'      <div class="collapsible-header">' + name + '</div>\n' +
+			'      <div class="collapsible-body"><span>' + data + '</span></div>\n' +
+			'    </li>\n' +
+			'  </ul>';
+	};
+	$("#de-btn").click(() => {
+		const obj = JSON.parse($("#input").val());
+
+
+		$("#output").html(parseObject(obj));
+		$('.collapsible').collapsible();
+	});
+
+
+</script>

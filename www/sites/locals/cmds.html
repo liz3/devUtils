@@ -1,0 +1,139 @@
+<h1>Commands</h1>
+<div class="row">
+	<div class="input-field col s8">
+		<input id="quick-cmd" type="text" class="validate">
+		<label for="quick-cmd" data-error="wrong" data-success="right">Command</label>
+
+	</div>
+	<div class="input-field col s2">
+		<a id="save-btn" class="waves-effect waves-light btn">Save</a>
+	</div>
+	<div class="input-field col s2">
+		<a id="exec-btn" class="waves-effect waves-light btn">-></a>
+	</div>
+</div>
+<div class="row">
+	<div class="input-field col s10">
+		<textarea id="output" class="materialize-textarea"></textarea>
+		<label for="output">Output</label>
+	</div>
+</div>
+<div class="row">
+	<ul class="collection with-header" id="saves">
+		<li class="collection-header"><h4>Saved</h4></li>
+	</ul>
+</div>
+<script type="application/javascript">
+
+	console.log(__dirname);
+	var count = 0;
+	var {exec} = require('child_process');
+	var Datastore = require('nedb')
+		, db = new Datastore({ filename: require('electron').remote.app.getPath('documents') + "/.devutils/data", autoload: true });
+	console.log(db);
+	var running = false;
+
+	db.find({key: 'cmdsve'}, (err, docs) => {
+
+		for(let i = 0; i < docs.length; i++) {
+			count++;
+			const current = docs[i];
+			const command = current.command;
+			const htmlContent = '<li class="collection-item"><div>' + command + '<a href="#!" class="secondary-content"><i id="exec-btn-' + i + '"  class="material-icons">send</i><i id="trash-btn-' + i + '" class="material-icons">clear</i></a></div></li>';
+			$("#saves").append(htmlContent);
+			$("#trash-btn-" + i).click(() => {
+				$("#exec-btn-" + i).parent().parent().parent().remove();
+				db.remove({key: 'cmdsve', command: command});
+			});
+			$("#exec-btn-" + i).click(() => {
+
+				if (running) return;
+				$("#exec-btn").addClass("disabled");
+				running = true;
+
+				exec(command, (err, stdout, stderr) => {
+					running = false;
+					$("#exec-btn").removeClass("disabled");
+					if (err) {
+						Materialize.toast('Failure while executing, see output', 4000);
+						$("#output").val(err);
+						return;
+					}
+					let content = `stdout: ${stdout}`;
+					content += `stderr: ${stderr}`;
+					$("#output").val(content);
+				});
+			});
+		}
+
+	});
+
+	$("#output").val("   ");
+	$("#exec-btn").click(() => {
+		if (running) return;
+		$("#exec-btn").addClass("disabled");
+		running = true;
+		const cmd = $("#quick-cmd").val();
+		exec(cmd, (err, stdout, stderr) => {
+			running = false;
+			$("#exec-btn").removeClass("disabled");
+			if (err) {
+				Materialize.toast('Failure while executing, see output', 4000);
+				$("#output").val(err);
+				return;
+			}
+			let content = `stdout: ${stdout}`;
+			content += `stderr: ${stderr}`;
+			$("#output").val(content);
+		});
+	});
+	$("#save-btn").click(() => {
+		const cmd = $("#quick-cmd").val();
+		let found = false;
+		db.find({key: 'cmdsve'}, (err, docs) => {
+
+			for(let i = 0; i < docs.length; i++) {
+				const current = docs[i];
+				const command = current.command;
+
+				if(command === cmd) {
+					found = true;
+					break;
+				}
+			}
+
+			if (found) return;
+
+			count++;
+			let i = count;
+			const htmlContent = '<li class="collection-item"><div>' + cmd + '<a href="#!" class="secondary-content"><i id="exec-btn-' + i + '"  class="material-icons">send</i><i id="trash-btn-' + i + '" class="material-icons">clear</i></a></div></li>';
+			$("#saves").append(htmlContent);
+			$("#trash-btn-" + i).click(() => {
+				$("#exec-btn-" + i).parent().parent().parent().remove();
+				db.remove({key: 'cmdsve', command: cmd});
+			});
+			$("#exec-btn-" + i).click(() => {
+
+				if (running) return;
+				$("#exec-btn").addClass("disabled");
+				running = true;
+
+				exec(cmd, (err, stdout, stderr) => {
+					running = false;
+					$("#exec-btn").removeClass("disabled");
+					if (err) {
+						Materialize.toast('Failure while executing, see output', 4000);
+						$("#output").val(err);
+						return;
+					}
+					let content = `stdout: ${stdout}`;
+					content += `stderr: ${stderr}`;
+					$("#output").val(content);
+				});
+			});
+			db.insert({key: "cmdsve", command: cmd});
+		});
+
+
+	});
+</script>
